@@ -26,12 +26,6 @@
 #include "Arduino.h"
 #include <SPI.h>
 
-#if defined(__IMXRT1062__)
-#if __has_include(<FlexIOSPI.h>)
-	#include <FlexIOSPI.h>
-#endif
-#endif
-
 #if ARDUINO < 10600
 #error "Arduino 1.6.0 or later (SPI library) is required"
 #endif
@@ -45,15 +39,13 @@ public:
 	int16_t x, y, z;
 };
 
+class SPIClass;
+
 class XPT2046_Touchscreen {
 public:
-	constexpr XPT2046_Touchscreen(uint8_t cspin, uint8_t tirq=255)
-		: csPin(cspin), tirqPin(tirq) { }
-	bool begin(SPIClass &wspi = SPI);
-#if defined(_FLEXIO_SPI_H_)
-	bool begin(FlexIOSPI &wflexspi);
-#endif
-
+	constexpr XPT2046_Touchscreen(uint8_t cspin, uint8_t tirq=255, SPIClass* spi=&SPI)
+		: csPin(cspin), tirqPin(tirq), _spi(spi) { }
+	bool begin();
 	TS_Point getPoint();
 	bool tirqTouched();
 	bool touched();
@@ -69,10 +61,7 @@ private:
 	uint8_t csPin, tirqPin, rotation=1;
 	int16_t xraw=0, yraw=0, zraw=0;
 	uint32_t msraw=0x80000000;
-	SPIClass *_pspi = nullptr;
-#if defined(_FLEXIO_SPI_H_)
-	FlexIOSPI *_pflexspi = nullptr;
-#endif
+	SPIClass* _spi;
 };
 
 #ifndef ISR_PREFIX
